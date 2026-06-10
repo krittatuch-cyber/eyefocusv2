@@ -1,0 +1,83 @@
+{
+  "exportedAt": "2026-06-10T03:57:21.303Z",
+  "tables": [
+    {
+      "table": "tenants",
+      "rows": 3
+    },
+    {
+      "table": "branches",
+      "rows": 4
+    },
+    {
+      "table": "users",
+      "rows": 8
+    },
+    {
+      "table": "customers",
+      "rows": 6
+    },
+    {
+      "table": "eye_prescriptions",
+      "rows": 2
+    },
+    {
+      "table": "products",
+      "rows": 10
+    },
+    {
+      "table": "stocks",
+      "rows": 30
+    },
+    {
+      "table": "suppliers",
+      "rows": 0
+    },
+    {
+      "table": "lab_vendors",
+      "rows": 0
+    },
+    {
+      "table": "shifts",
+      "rows": 0
+    },
+    {
+      "table": "orders",
+      "rows": 1
+    },
+    {
+      "table": "order_items",
+      "rows": 4
+    },
+    {
+      "table": "job_tickets",
+      "rows": 0
+    },
+    {
+      "table": "installments",
+      "rows": 0
+    },
+    {
+      "table": "appointments",
+      "rows": 0
+    },
+    {
+      "table": "claims",
+      "rows": 0
+    },
+    {
+      "table": "stock_transfers",
+      "rows": 0
+    },
+    {
+      "table": "commission_rules",
+      "rows": 0
+    },
+    {
+      "table": "audit_logs",
+      "rows": 18
+    }
+  ],
+  "totalRows": 86,
+  "source": "Neon PostgreSQL (ap-southeast-1)"
+}
