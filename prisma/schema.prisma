@@ -1,0 +1,308 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  OWNER
+  MANAGER
+  SELLER
+}
+
+enum ShiftStatus {
+  OPEN
+  CLOSED
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  QR_PROMPTPAY
+  CREDIT_CARD
+  INSTALLMENT
+}
+
+enum JobStatus {
+  PENDING
+  PREPARING
+  SEND_TO_LAB
+  LAB_PROCESSING
+  RECEIVED_FROM_LAB
+  READY_FOR_PICKUP
+  DELIVERED
+}
+
+enum ProductCategory {
+  FRAME
+  LENS
+  CONTACT_LENS
+  ACCESSORY
+  OTHER
+}
+
+enum StockTransferStatus {
+  PENDING
+  SHIPPED
+  RECEIVED
+  CANCELLED
+}
+
+model Branch {
+  id               String          @id @default(uuid())
+  name             String
+  code             String          @unique
+  address          String?
+  phone            String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  users            User[]
+  stocks           Stock[]
+  orders           Order[]
+  appointments     Appointment[]
+  claims           Claim[]
+  receivedTransfers StockTransfer[] @relation("ToBranch")
+  sentTransfers     StockTransfer[] @relation("FromBranch")
+}
+
+model User {
+  id           String          @id @default(uuid())
+  email        String          @unique
+  name         String
+  passwordHash String
+  role         Role            @default(SELLER)
+  isActive     Boolean         @default(true)
+  branchId     String?
+  branch       Branch?         @relation(fields: [branchId], references: [id])
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  shifts       Shift[]
+  orders       Order[]
+  appointments Appointment[]
+  sentTransfers StockTransfer[] @relation("Sender")
+  receivedTransfers StockTransfer[] @relation("Receiver")
+}
+
+model Shift {
+  id           String      @id @default(uuid())
+  userId       String
+  user         User        @relation(fields: [userId], references: [id])
+  openedAt     DateTime    @default(now())
+  closedAt     DateTime?
+  startingCash Float
+  expectedCash Float?
+  actualCash   Float?
+  difference   Float?
+  status       ShiftStatus @default(OPEN)
+  notes        String?
+  orders       Order[]
+}
+
+model Customer {
+  id               String            @id @default(uuid())
+  name             String
+  phone            String            @unique
+  email            String?
+  lineId           String?
+  gender           String?
+  birthDate        DateTime?
+  notes            String?
+  loyaltyPoints    Int               @default(0)
+  loyaltyTier      String            @default("BRONZE") // BRONZE, SILVER, GOLD
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  eyePrescriptions EyePrescription[]
+  orders           Order[]
+  appointments     Appointment[]
+}
+
+model EyePrescription {
+  id         String   @id @default(uuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+  recordedAt DateTime @default(now())
+  recorderId String
+  
+  // Right Eye (ตาขวา)
+  sphR       Float    // Sphere (สายตาสั้น/ยาว)
+  cylR       Float?   // Cylinder (สายตาเอียง)
+  axisR      Int?     // Axis (องศาเอียง)
+  pdR        Float    // Pupillary Distance (ระยะห่างรูม่านตา)
+  addR       Float?   // Addition (ค่าสายตายาวตามอายุ)
+
+  // Left Eye (ตาซ้าย)
+  sphL       Float
+  cylL       Float?
+  axisL      Int?
+  pdL        Float
+  addL       Float?
+
+  notes      String?
+}
+
+model Product {
+  id          String            @id @default(uuid())
+  code        String            @unique
+  name        String
+  category    ProductCategory
+  brand       String?
+  model       String?
+  price       Float
+  cost        Float
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  orderItems  OrderItem[]
+  stocks      Stock[]
+  apptItems   AppointmentItem[]
+}
+
+model Stock {
+  id        String   @id @default(uuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  branchId  String
+  branch    Branch   @relation(fields: [branchId], references: [id])
+  quantity  Int      @default(0)
+  minAlert  Int      @default(5)
+  @@unique([productId, branchId])
+}
+
+model Order {
+  id               String          @id @default(uuid())
+  orderNumber      String          @unique
+  customerId       String?
+  customer         Customer?       @relation(fields: [customerId], references: [id])
+  sellerId         String
+  seller           User            @relation(fields: [sellerId], references: [id])
+  branchId         String
+  branch           Branch          @relation(fields: [branchId], references: [id])
+  shiftId          String
+  shift            Shift           @relation(fields: [shiftId], references: [id])
+  totalAmount      Float
+  discountAmount   Float           @default(0)
+  netAmount        Float
+  paidAmount       Float
+  paymentMethod    PaymentMethod
+  status           OrderStatus     @default(PENDING)
+  isETaxRequested  Boolean         @default(false)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  items            OrderItem[]
+  jobTicket        JobTicket?
+  installments     Installment[]
+  claims           Claim[]
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Float
+  discount  Float   @default(0)
+}
+
+model Appointment {
+  id                String            @id @default(uuid())
+  appointmentNumber String            @unique
+  customerId        String
+  customer          Customer          @relation(fields: [customerId], references: [id])
+  sellerId          String
+  seller            User              @relation(fields: [sellerId], references: [id])
+  branchId          String
+  branch            Branch            @relation(fields: [branchId], references: [id])
+  scheduledAt       DateTime
+  purpose           String            // e.g. "วัดสายตา", "รับแว่น", "ทดลองเลนส์"
+  totalAmount       Float             @default(0)
+  depositAmount     Float             @default(0) // เงินมัดจำถ้ามี
+  status            String            @default("SCHEDULED") // SCHEDULED, COMPLETED, CANCELLED
+  lineSent          Boolean           @default(false)
+  notes             String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  items             AppointmentItem[]
+}
+
+model AppointmentItem {
+  id            String      @id @default(uuid())
+  appointmentId String
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  productId     String
+  product       Product     @relation(fields: [productId], references: [id])
+  quantity      Int
+  price         Float
+}
+
+model JobTicket {
+  id          String    @id @default(uuid())
+  orderId     String    @unique
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status      JobStatus @default(PENDING)
+  labName     String?
+  lensType    String?
+  lensDetails String?
+  
+  // Lens specifications
+  sphR        Float
+  cylR        Float?
+  axisR       Int?
+  addR        Float?
+  sphL        Float
+  cylL        Float?
+  axisL       Int?
+  addL        Float?
+  pd          Float
+
+  notes       String?
+  targetDate  DateTime?
+  updatedAt   DateTime  @updatedAt
+}
+
+model Installment {
+  id           String   @id @default(uuid())
+  orderId      String
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  termNumber   Int
+  amount       Float
+  dueDate      DateTime
+  paidDate     DateTime?
+  status       String   @default("PENDING") // PENDING, PAID, OVERDUE
+}
+
+model Claim {
+  id          String   @id @default(uuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id])
+  branchId    String
+  branch      Branch   @relation(fields: [branchId], references: [id])
+  reason      String
+  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED, COMPLETED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model StockTransfer {
+  id           String              @id @default(uuid())
+  fromBranchId String
+  fromBranch   Branch              @relation("FromBranch", fields: [fromBranchId], references: [id])
+  toBranchId   String
+  toBranch     Branch              @relation("ToBranch", fields: [toBranchId], references: [id])
+  senderId     String
+  sender       User                @relation("Sender", fields: [senderId], references: [id])
+  receiverId   String?
+  receiver     User?               @relation("Receiver", fields: [receiverId], references: [id])
+  status       StockTransferStatus @default(PENDING)
+  notes        String?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+}

@@ -1,0 +1,112 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Prompt:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap");
+@import "tailwindcss";
+
+/* ─── Dark mode: class-based (Tailwind v4) ─────────────────── */
+/* ทำให้ dark: prefix ทำงานเมื่อมี class="dark" บน <html> */
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: #F8FAFC;
+  --foreground: #0B111E;
+  
+  --card: #FFFFFF;
+  --card-foreground: #0B111E;
+  
+  --border: #E2E8F0;
+  
+  --muted-foreground: #64748B;
+  
+  --primary-dark: #0B111E;
+  --primary-medium: #1E293B;
+  --primary-light: #475569;
+  
+  --accent: #0052FF;
+  --accent-hover: #0047DD;
+  --accent-blue: #3B82F6;
+  
+  --success: #10B981;
+  --warning: #F59E0B;
+  --error: #EF4444;
+}
+
+/* Explicit class for manual dark mode toggles */
+.dark, [data-theme="dark"] {
+  --background: #0F172A;
+  --foreground: #F8FAFC;
+  
+  --card: #1E293B;
+  --card-foreground: #F8FAFC;
+  
+  --border: #334155;
+  
+  --muted-foreground: #94A3B8;
+  
+  --primary-dark: #F8FAFC;
+  --primary-medium: #94A3B8;
+  --primary-light: #64748B;
+}
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+  --color-muted-foreground: var(--muted-foreground);
+  
+  --color-primary-dark: var(--primary-dark);
+  --color-primary-medium: var(--primary-medium);
+  --color-primary-light: var(--primary-light);
+  
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-blue: var(--accent-blue);
+  
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  
+  --font-heading: "Prompt", sans-serif;
+  --font-sans: "IBM Plex Sans Thai", "Inter", sans-serif;
+  
+  --radius-card: 16px;
+  --radius-btn: 12px;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+/* Utility classes for premium look */
+.glass {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.dark .glass {
+  background: rgba(30, 41, 59, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(51, 65, 85, 0.8);
+}
+
+/* Touch targets and standard UI elements spacing */
+.touch-target {
+  min-height: 44px;
+}
+
+input, select, textarea {
+  min-height: 44px;
+  border-radius: 12px;
+}
+
+button {
+  min-height: 44px;
+  border-radius: 12px;
+}
